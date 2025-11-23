@@ -2,29 +2,36 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: 17
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Make gradle executable
-      run: chmod +x ./gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
-    - name: Build Release
-      run: ./gradlew assembleRelease
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: sprintback-apk
-        path: app/build/outputs/apk/release/*.apk
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        if: always()     # <-- загружает даже если сборка упала
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
